@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
+	"strings"
 )
 
 // init function
@@ -81,8 +83,24 @@ type handler struct {
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err := tpl.Execute(w, h.s["intro"])
-	check(err)
+	// trim space isn't super necessary but a good check
+	path := strings.TrimSpace(r.URL.Path)
+	// if there's no path, start from the beginning of the story
+	if path == "" || path == "/" {
+		path = "/intro"
+	}
+	// get rid of leading slash
+	path = path[1:]
+
+	if chapter, ok := h.s[path]; ok {
+		err := tpl.Execute(w, chapter)
+		if err != nil {
+			log.Printf("%v", err)
+			http.Error(w, "Something went wrong...", http.StatusInternalServerError)
+		}
+		return
+	}
+	http.Error(w, "Chapter not found", http.StatusNotFound)
 }
 
 func check(err error) {

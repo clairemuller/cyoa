@@ -20,6 +20,9 @@ import (
 // template.Must()
 // Must is a helper that wraps a call to a function returning (*Template, error)
 // and panics if the error is non-nil.
+// create template with New("name"), name could be empty ""
+// then Parse the given text for the template, here it's html
+// later will Execute the template on chapters
 func init() {
 	tpl = template.Must(template.New("").Parse(defaultHandlerTmpl))
 }
@@ -93,6 +96,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path = path[1:]
 
 	if chapter, ok := h.s[path]; ok {
+		// use the template created in init to execute
 		err := tpl.Execute(w, chapter)
 		if err != nil {
 			log.Printf("%v", err)
